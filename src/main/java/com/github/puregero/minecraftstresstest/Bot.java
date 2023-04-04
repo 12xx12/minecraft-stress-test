@@ -12,7 +12,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 public class Bot extends ChannelInboundHandlerAdapter {
-    private static final int PROTOCOL_VERSION = Integer.parseInt(System.getProperty("bot.protocol.version", "761")); // 761 is 1.19.3 https://wiki.vg/Protocol_version_numbers
+    private static final int PROTOCOL_VERSION = Integer.parseInt(System.getProperty("bot.protocol.version", "340")); // 761 is 1.19.3 https://wiki.vg/Protocol_version_numbers
     private static final double CENTER_X = Double.parseDouble(System.getProperty("bot.x", "0"));
     private static final double CENTER_Z = Double.parseDouble(System.getProperty("bot.z", "0"));
     private static final boolean LOGS = Boolean.parseBoolean(System.getProperty("bot.logs", "true"));
@@ -59,7 +59,6 @@ public class Bot extends ChannelInboundHandlerAdapter {
 
         sendPacket(ctx, PacketIds.Serverbound.Login.LOGIN_START, buffer -> {
             buffer.writeUtf(username);
-            buffer.writeBoolean(false);
         });
     }
 
@@ -98,6 +97,8 @@ public class Bot extends ChannelInboundHandlerAdapter {
             byteBuf.readVarInt();
             ctx.pipeline().addAfter("packetDecoder", "compressionDecoder", new CompressionDecoder());
             ctx.pipeline().addAfter("packetEncoder", "compressionEncoder", new CompressionEncoder());
+        } else if (packetId == 1) {
+            System.out.println("Please disable auth");
         } else {
             throw new RuntimeException("Unknown login packet id of " + packetId);
         }
@@ -109,6 +110,8 @@ public class Bot extends ChannelInboundHandlerAdapter {
         System.out.println(username + " (" + uuid + ") has logged in");
         loginState = false;
 
+        this.y = 100;
+
         CompletableFuture.delayedExecutor(1000,TimeUnit.MILLISECONDS).execute(() -> {
             sendPacket(ctx, PacketIds.Serverbound.Play.CLIENT_INFORMATION, buffer -> {
                 buffer.writeUtf("en_GB");
@@ -116,11 +119,11 @@ public class Bot extends ChannelInboundHandlerAdapter {
                 buffer.writeVarInt(0);
                 buffer.writeBoolean(true);
                 buffer.writeByte(0);
+                /*
                 buffer.writeVarInt(0);
                 buffer.writeBoolean(false);
-                buffer.writeBoolean(true);
+                buffer.writeBoolean(true); */
             });
-
             CompletableFuture.delayedExecutor(1000, TimeUnit.MILLISECONDS).execute(() -> tick(ctx));
         });
     }

@@ -121,6 +121,8 @@ public class FriendlyByteBuf extends ByteBuf {
         } else if (j < 0) {
             throw new DecoderException("The received encoded string buffer length is less than zero! Weird string!");
         } else {
+            if (this.readerIndex() + j > this.readableBytes())
+                j = this.readableBytes() - this.readerIndex();
             String s = this.toString(this.readerIndex(), j, StandardCharsets.UTF_8);
 
             this.readerIndex(this.readerIndex() + j);
